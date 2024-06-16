@@ -7,6 +7,9 @@ namespace BookShoppingUI.Models
         [Key]
         public int Id { get; set; }
 
+        [Required]
+        public int StatusId { get; set; }
+
         [Required, MaxLength(35)]
 
         public string? StatusName { get; set; }
