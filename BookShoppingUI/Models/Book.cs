@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BookShoppingUI.Models
 {
@@ -9,6 +10,9 @@ namespace BookShoppingUI.Models
 
         [Required, MaxLength(50)]
         public string? BookName { get; set; }
+
+        [Required, MaxLength(50)]
+        public string? AuthorName { get; set; }
 
         public double Price { get; set; }
 
@@ -22,5 +26,8 @@ namespace BookShoppingUI.Models
         public List<OrderDetail>? OrderDetails { get; set; }
 
         public List<CartDetail>? CartDetails { get; set; }
+
+        [NotMapped]
+        public string? GenreName { get; set; }
     }
 }

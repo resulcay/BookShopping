@@ -19,6 +19,8 @@ namespace BookShoppingUI.Models
 
         public bool IsDeleted { get; set; } = false;
 
+        public bool IsPaid { get; set; } = false;
+
         public List<OrderDetail>? OrderDetails { get; set; }
 
     }

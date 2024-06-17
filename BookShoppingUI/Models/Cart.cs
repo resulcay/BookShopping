@@ -11,5 +11,7 @@ namespace BookShoppingUI.Models
         public string? UserId { get; set; }
 
         public bool IsDeleted { get; set; } = false;
+
+        public virtual ICollection<CartDetail>? CartDetails { get; set; }
     }
 }
