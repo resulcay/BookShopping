@@ -5,8 +5,8 @@ namespace BookShoppingUI.Data
 {
     public class DbSeeder
     {
-        public static async Task SeedDefaultData(IServiceProvider serviceProvider) 
-        { 
+        public static async Task SeedDefaultData(IServiceProvider serviceProvider)
+        {
             var userManager = serviceProvider.GetService<UserManager<IdentityUser>>();
             var roleManager = serviceProvider.GetService<RoleManager<IdentityRole>>();
 
