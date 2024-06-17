@@ -19,19 +19,13 @@ namespace BookShoppingUI.Repositories
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<bool> AddItem(int bookId, int quantity)
+        public async Task<int> AddItem(int bookId, int quantity)
         {
+            string userId = GetUserId();
             using var transaction =  _context.Database.BeginTransaction();
 
             try
             {
-                string userId = GetUserId();
-
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return false;
-                }
-
                 var cart = await GetCart(userId);
 
                 if (cart is null)
@@ -66,39 +60,29 @@ namespace BookShoppingUI.Repositories
 
                 _context.SaveChanges();
                 transaction.Commit();
-
-                return true;
-
             }
             catch (Exception)
             {
-                return false;
+                
             }
+
+            var cartItemCount = await GetCartItem(userId);
+            return cartItemCount;
         }
 
-        public async Task<bool> RemoveItem(int bookId)
+        public async Task<int> RemoveItem(int bookId)
         {
+            string userId = GetUserId();
+
             try
             {
-                string userId = GetUserId();
-
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return false;
-                }
-
-                var cart = await GetCart(userId);
-
-                if (cart is null)
-                {
-                    return false;
-                }
+                var cart = await GetCart(userId) ?? throw new Exception("Invalid Cart");
 
                 var cartItem = _context.CartDetails.FirstOrDefault(cd => cd.CartId == cart.Id && cd.BookId == bookId);
 
                 if (cartItem is null)
                 {
-                    return false;
+                    throw new Exception("Cart is empty");
                 }
                 else if (cartItem.Quantity == 1)
                 {
@@ -110,22 +94,19 @@ namespace BookShoppingUI.Repositories
                 }
 
                 _context.SaveChanges();
-                return true;
             }
             catch (Exception)
             {
-                return false;
+               
             }
+
+            var cartItemCount = await GetCartItem(userId);
+            return cartItemCount;
         }
 
         public async Task<IEnumerable<Cart>> GetUserCart()
         {
             var userId = GetUserId();
-
-            if (string.IsNullOrEmpty(userId)) 
-            {
-                throw new Exception("User not found");
-            }
 
             var cart = await _context.Carts.
                 Include(c => c.CartDetails)!.
@@ -135,6 +116,21 @@ namespace BookShoppingUI.Repositories
                 ToListAsync();
         
             return cart;
+        }
+
+        public async Task<int> GetCartItem(string userId = "")
+        {
+            if (string.IsNullOrEmpty(userId))
+            {
+                userId = GetUserId();
+            }
+
+            var data = await (from cart in _context.Carts
+                              join cartDetail in _context.CartDetails
+                              on cart.Id equals cartDetail.CartId
+                              where cart.UserId == userId
+                              select cartDetail.Quantity).SumAsync();
+            return data;
         }
 
         private async Task<Cart?> GetCart(string userId)
@@ -148,7 +144,13 @@ namespace BookShoppingUI.Repositories
             var principal = _httpContextAccessor.HttpContext!.User;
             string userId = _userManager.GetUserId(principal)!;
 
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new Exception("User not found");
+            }
+
             return userId;
         }
-    }
+
+  }
 }
