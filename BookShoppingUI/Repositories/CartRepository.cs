@@ -66,7 +66,7 @@ namespace BookShoppingUI.Repositories
                 
             }
 
-            var cartItemCount = await GetCartItem(userId);
+            var cartItemCount = await GetCartItemCount(userId);
             return cartItemCount;
         }
 
@@ -100,11 +100,11 @@ namespace BookShoppingUI.Repositories
                
             }
 
-            var cartItemCount = await GetCartItem(userId);
+            var cartItemCount = await GetCartItemCount(userId);
             return cartItemCount;
         }
 
-        public async Task<IEnumerable<Cart>> GetUserCart()
+        public async Task<Cart> GetUserCart()
         {
             var userId = GetUserId();
 
@@ -113,12 +113,12 @@ namespace BookShoppingUI.Repositories
                 ThenInclude(cd => cd.Book).
                 ThenInclude(b => b!.Genre).
                 Where(c => c.UserId == userId).
-                ToListAsync();
+                FirstOrDefaultAsync();
         
-            return cart;
+            return cart!;
         }
 
-        public async Task<int> GetCartItem(string userId = "")
+        public async Task<int> GetCartItemCount(string userId = "")
         {
             if (string.IsNullOrEmpty(userId))
             {
