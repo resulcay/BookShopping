@@ -27,8 +27,7 @@ namespace BookShoppingUI.Controllers
 
         public async Task<IActionResult> RemoveItem(int bookId)
         {
-            var cartCount = await _cartRepository.RemoveItem(bookId);
-
+            await _cartRepository.RemoveItem(bookId);
             return RedirectToAction("GetUserCart");
         }
 
