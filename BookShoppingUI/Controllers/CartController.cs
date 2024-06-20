@@ -43,16 +43,37 @@ namespace BookShoppingUI.Controllers
             return Ok(cartItemCount);
         }
 
-        public async Task<IActionResult> CheckOut()
+        public IActionResult CheckOut()
         {
-            bool isCheckOutSuccess = await _cartRepository.DoCheckOut();
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CheckOut(CheckOutModel checkOutModel)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(checkOutModel);
+            }
+
+            bool isCheckOutSuccess = await _cartRepository.DoCheckOut(checkOutModel);
 
             if (!isCheckOutSuccess)
             {
-                throw new Exception("Check out failed");
+                return RedirectToAction(nameof(OrderFailure));
             }
 
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction(nameof(OrderSuccess));
+        }
+
+        public IActionResult OrderFailure()
+        {
+            return View();
+        }
+
+        public IActionResult OrderSuccess()
+        {
+            return View();
         }
     }
 }

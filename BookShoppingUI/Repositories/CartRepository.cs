@@ -128,7 +128,7 @@ namespace BookShoppingUI.Repositories
             return data;
         }
          
-        public async Task<bool> DoCheckOut()
+        public async Task<bool> DoCheckOut(CheckOutModel checkOutModel)
         {
             using var transaction = context.Database.BeginTransaction();
             try
@@ -142,11 +142,20 @@ namespace BookShoppingUI.Repositories
                     throw new Exception("Cart is empty");
                 }
 
+                var pendingRecord = context.OrderStatuses.FirstOrDefault(o => o.StatusName == StatusAlias.OrderStatuses.Pending.ToString())
+                    ?? throw new Exception("Invalid Order Status");
+
                 var order = new Order
                 {
                     UserId = userId,
                     OrderDate = DateTime.Now,
-                    OrderStatusId = (int)StatusAlias.OrderStatus.Pending,
+                    OrderStatusId = pendingRecord.StatusId,
+                    Address = checkOutModel.Address,
+                    Email = checkOutModel.Email,
+                    PaymentMethod = checkOutModel.PaymentMethod,
+                    Phone = checkOutModel.Phone,
+                    Name = checkOutModel.Name,
+                    IsPaid = false,
                 };
 
                 context.Orders.Add(order);

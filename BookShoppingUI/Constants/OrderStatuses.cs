@@ -1,6 +1,6 @@
 ﻿namespace BookShoppingUI.Constants
 {
-    public enum OrderStatus
+    public enum OrderStatuses
     {
         Pending = 1,
         Shipped = 2,
