@@ -1,0 +1,60 @@
+﻿@model IEnumerable<Order>
+
+@{
+    ViewData["Title"] = "AllOrders";
+}
+
+<div class="mt-2" style="width:100%">
+    <h2>Manage-Orders</h2>
+    @if (Model == null || Model.Count() <= 0)
+    {
+        <div class="container d-flex justify-content-center align-items-center" style="height: 80vh;">
+            <div class="alert alert-warning" role="alert">
+                There is no order at the moment for Admin.
+            </div>
+        </div>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <tr>
+                <th>Id</th>
+                <th>OrderDate</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Address</th>
+                <th>PaymentStatus</th>
+                <th>OrderStatus</th>
+                <th>Actions</th>
+            </tr>
+
+            @foreach (var order in Model)
+            {
+                <tr style="vertical-align:middle">
+                    <td>@order.Id</td>
+                    <td>@order.OrderDate.ToString("dd-MM-yyyy HH:mm:ss")</td>
+                    <td>@order.Name</td>
+                    <td>@order.Email</td>
+                    <td>@order.Phone</td>
+                    <td>
+                        <div style="word-wrap:break-word;white-space:normal;width: 200px;"> @order.Address</div>
+                       </td>
+                    <td>@(order.IsPaid ? "Paid" : "Not Paid")</td>
+                    <td>@order.OrderStatus?.StatusName</td>
+                    <td>
+                        <button type="button" data-bs-toggle="modal" data-bs-target="#modal-@order.Id" class="btn btn-primary">Order Details</button>
+                        <a asp-action="UpdateOrderStatus" asp-route-orderId="@order.Id" class="btn btn-info my-2">Change Order Status</a>
+                        <a asp-action="TogglePaymentStatus" asp-route-orderId="@order.Id" class="btn btn-secondary">Toggle Payment Status</a>
+                        @await Html.PartialAsync("_OrderDetailModal", new OrderDetailModel 
+                        {  
+                         DivId = order.Id.ToString(),
+                         OrderDetail = @order.OrderDetails,
+                         TotalPrice = @order.OrderDetails!.Select(d => d.UnitPrice * d.Quantity).Sum()
+                        })
+                    </td>
+                </tr>
+            }
+        </table>
+    }
+</div>
