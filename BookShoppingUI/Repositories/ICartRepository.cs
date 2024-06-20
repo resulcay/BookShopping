@@ -6,5 +6,6 @@
         Task<int> AddItem(int bookId, int quantity);
         Task<Cart> GetUserCart();
         Task<int> GetCartItemCount(string userId = "");
+        Task<bool> DoCheckOut();
     }
 }

@@ -23,8 +23,8 @@
                             <span class="visually-hidden">(current)</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/Home/Privacy">Features</a>
+                    <li id="order" class="nav-item">
+                        <a class="nav-link" href="/Order/GetOrder">Orders</a>
                     </li>
                     @*                     <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Dropdown</a>
@@ -47,6 +47,7 @@
 </html>
 
 <script>
+    checkUser();
     loadCartCount();
     async function loadCartCount() {
 
@@ -67,6 +68,16 @@
         }
         catch (error) {
             console.error('Error:', error);
+        }
+    }
+    function checkUser() {
+        var userName = document.getElementById('userName');
+        var order = document.getElementById('order');
+
+        if (userName != null) {
+            order.style.display = 'block';
+        } else {
+            order.style.display = 'none';
         }
     }
 </script>

@@ -1,28 +1,22 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using StatusAlias = BookShoppingUI.Constants; 
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace BookShoppingUI.Repositories
 {
-    public class CartRepository : ICartRepository
+    public class CartRepository : UserTracker, ICartRepository
     {
-        private readonly ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-
-        public CartRepository(
-            ApplicationDbContext context,
-            UserManager<IdentityUser> userManager,
-            IHttpContextAccessor httpContextAccessor)
+        public CartRepository(UserManager<IdentityUser> userManager,
+            IHttpContextAccessor httpContextAccessor,
+            ApplicationDbContext context)
+            : base(userManager, httpContextAccessor, context)
         {
-            _context = context;
-            _userManager = userManager;
-            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<int> AddItem(int bookId, int quantity)
         {
             string userId = GetUserId();
-            using var transaction =  _context.Database.BeginTransaction();
+            using var transaction =  context.Database.BeginTransaction();
 
             try
             {
@@ -35,12 +29,12 @@ namespace BookShoppingUI.Repositories
                         UserId = userId
                     };
 
-                    _context.Carts.Add(cart);
+                    context.Carts.Add(cart);
                 }
 
-                _context.SaveChanges();
+                context.SaveChanges();
 
-                var cartItem = _context.CartDetails.FirstOrDefault(cd => cd.CartId == cart.Id && cd.BookId == bookId);
+                var cartItem = context.CartDetails.FirstOrDefault(cd => cd.CartId == cart.Id && cd.BookId == bookId);
 
                 if (cartItem is not null)
                 {
@@ -52,13 +46,14 @@ namespace BookShoppingUI.Repositories
                     {
                         CartId = cart.Id,
                         BookId = bookId,
-                        Quantity = quantity
+                        Quantity = quantity,
+                        UnitPrice = context.Books.Find(bookId)!.Price
                     };
 
-                    _context.CartDetails.Add(cartItem);
+                    context.CartDetails.Add(cartItem);
                 }
 
-                _context.SaveChanges();
+                context.SaveChanges();
                 transaction.Commit();
             }
             catch (Exception)
@@ -78,7 +73,7 @@ namespace BookShoppingUI.Repositories
             {
                 var cart = await GetCart(userId) ?? throw new Exception("Invalid Cart");
 
-                var cartItem = _context.CartDetails.FirstOrDefault(cd => cd.CartId == cart.Id && cd.BookId == bookId);
+                var cartItem = context.CartDetails.FirstOrDefault(cd => cd.CartId == cart.Id && cd.BookId == bookId);
 
                 if (cartItem is null)
                 {
@@ -86,14 +81,14 @@ namespace BookShoppingUI.Repositories
                 }
                 else if (cartItem.Quantity == 1)
                 {
-                    _context.CartDetails.Remove(cartItem);
+                    context.CartDetails.Remove(cartItem);
                 }
                 else
                 {
                     cartItem.Quantity--;
                 }
 
-                _context.SaveChanges();
+                context.SaveChanges();
             }
             catch (Exception)
             {
@@ -108,7 +103,7 @@ namespace BookShoppingUI.Repositories
         {
             var userId = GetUserId();
 
-            var cart = await _context.Carts.
+            var cart = await context.Carts.
                 Include(c => c.CartDetails)!.
                 ThenInclude(cd => cd.Book).
                 ThenInclude(b => b!.Genre).
@@ -125,32 +120,68 @@ namespace BookShoppingUI.Repositories
                 userId = GetUserId();
             }
 
-            var data = await (from cart in _context.Carts
-                              join cartDetail in _context.CartDetails
+            var data = await (from cart in context.Carts
+                              join cartDetail in context.CartDetails
                               on cart.Id equals cartDetail.CartId
                               where cart.UserId == userId
                               select cartDetail.Quantity).SumAsync();
             return data;
         }
+         
+        public async Task<bool> DoCheckOut()
+        {
+            using var transaction = context.Database.BeginTransaction();
+            try
+            {
+                var userId = GetUserId();
+                var cart = await GetCart(userId) ?? throw new Exception("Invalid Cart");
+                var cartDetails = context.CartDetails.Where(cd => cd.CartId == cart.Id).ToList();
+
+                if (cartDetails.Count == 0)
+                {
+                    throw new Exception("Cart is empty");
+                }
+
+                var order = new Order
+                {
+                    UserId = userId,
+                    OrderDate = DateTime.Now,
+                    OrderStatusId = (int)StatusAlias.OrderStatus.Pending,
+                };
+
+                context.Orders.Add(order);
+                context.SaveChanges();
+
+                foreach (var item in cartDetails)
+                {
+                    var orderDetail = new OrderDetail
+                    {
+                        OrderId = order.Id,
+                        BookId = item.BookId,
+                        Quantity = item.Quantity,
+                        UnitPrice = item.UnitPrice
+                    };
+                    context.OrderDetails.Add(orderDetail);
+                }
+
+                context.SaveChanges();
+                context.CartDetails.RemoveRange(cartDetails);
+                context.SaveChanges();
+                transaction.Commit();
+
+                return true;
+            }
+            catch (Exception)
+            {
+
+                return false;
+            }
+        }
 
         private async Task<Cart?> GetCart(string userId)
         {
-            var cart = await _context.Carts.FirstOrDefaultAsync(c => c.UserId == userId);
+            var cart = await context.Carts.FirstOrDefaultAsync(c => c.UserId == userId);
             return cart;
         }
-
-        private string GetUserId()
-        {
-            var principal = _httpContextAccessor.HttpContext!.User;
-            string userId = _userManager.GetUserId(principal)!;
-
-            if (string.IsNullOrEmpty(userId))
-            {
-                throw new Exception("User not found");
-            }
-
-            return userId;
-        }
-
   }
 }

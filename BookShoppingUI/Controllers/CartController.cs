@@ -42,5 +42,17 @@ namespace BookShoppingUI.Controllers
             int cartItemCount = await _cartRepository.GetCartItemCount();
             return Ok(cartItemCount);
         }
+
+        public async Task<IActionResult> CheckOut()
+        {
+            bool isCheckOutSuccess = await _cartRepository.DoCheckOut();
+
+            if (!isCheckOutSuccess)
+            {
+                throw new Exception("Check out failed");
+            }
+
+            return RedirectToAction("Index", "Home");
+        }
     }
 }

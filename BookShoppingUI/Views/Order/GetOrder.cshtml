@@ -1,0 +1,103 @@
+﻿@model IEnumerable<Order>
+
+@{
+    ViewData["Title"] = "GetOrder";
+}
+
+<div style="width:90%; margin:auto">
+    <h1 class="mt-4">Orders</h1>
+    <br />
+    @if (Model == null || Model?.Count() <= 0)
+    {
+        <div class="container d-flex justify-content-center align-items-center" style="height: 80vh;">
+            <div class="alert alert-warning" role="alert">
+                There is no order at the moment.
+            </div>
+        </div>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <tr>
+                <th>Thumbnails</th>
+                <th>OrderStatus</th>
+                <th>OrderDate</th>
+                <th>Details</th>
+            </tr>
+            @foreach (var item in Model!)
+            {
+                <tr style="vertical-align:middle">
+                    <td class="avatar-stack">
+                        <div class="avatar-container">
+                            @foreach (var orderDetail in item.OrderDetails!)
+                            {
+                                <img src="@orderDetail.Book!.Image" />
+                            }
+                        </div>
+                    </td>
+                    <td>@item.OrderStatus!.StatusName</td>
+                    <td>@item.OrderDate.ToString("dd-MM-yyyy  mm-HH-ss")</td>
+                    <td>
+                  
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#orderDetailsModal-@item.Id">
+                            Details
+                        </button>
+                    </td>
+                </tr>
+            }
+        </table>
+    }
+</div>
+
+@foreach (var item in Model!)
+{
+    <div class="modal fade" id="orderDetailsModal-@item.Id" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    @foreach (var detail in item.OrderDetails!)
+                    {
+                        <h5>@detail.Book!.BookName</h5>
+                        <br />
+                        <p>Quantity: @detail.Quantity</p>
+                        <p>Price: @detail.Book.Price €</p>
+                        <hr />
+                    }
+                    <h4>Total Price: @item.OrderDetails.Select(d => d.UnitPrice * d.Quantity).Sum().ToString("N2") €</h4>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .avatar-stack {
+        display: flex;
+        align-items: center;
+        padding: 0;
+    }
+
+    .avatar-container {
+        display: flex;
+        align-items: center;
+    }
+
+        .avatar-container img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid white;
+            margin-left: -30px;
+        }
+
+            .avatar-container img:first-child {
+                margin-left: 0;
+            }
+</style>

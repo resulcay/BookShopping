@@ -46,7 +46,7 @@
         <div>
             <h3>
                 Total Price: @Model.CartDetails.Select(cd => cd.Book!.Price * cd.Quantity).Sum().ToString("N2") €
-                <a class="btn btn-primary evdo" href="/Cart/Checkout">Checkout</a>
+                <a class="btn btn-primary evdo" href="/Cart/CheckOut">Checkout</a>
             </h3>
         </div>
         <style>

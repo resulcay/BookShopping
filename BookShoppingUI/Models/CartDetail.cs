@@ -18,5 +18,7 @@ namespace BookShoppingUI.Models
         public Book? Book { get; set; }
 
         public int Quantity { get; set; }
+
+        public double UnitPrice { get; set; }
     }
 }
